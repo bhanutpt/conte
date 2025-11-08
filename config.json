@@ -1,0 +1,6 @@
+
+{
+  "name": "My App",
+  "match": { "exe": ["myapp.exe"], "title_regex": ".*Project Phoenix.*" },
+  "content_html": "<h2>Phoenix Cheats</h2><ul><li><b>Ctrl+K</b>...</li></ul>"
+}
