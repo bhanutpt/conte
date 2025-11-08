@@ -7,7 +7,8 @@ DEFAULT_CONFIG = {
         "width_px": 460,
         "height_px": 320,
         "opacity": 0.92,
-        "always_on_top": True,
+        "always_on_top": False,
+        "always_on_back": True,
         "borderless": True,
     },
     "rules": [

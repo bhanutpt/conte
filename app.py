@@ -67,6 +67,9 @@ def load_config():
     cfg["ui"].setdefault("opacity", 0.92)
     cfg["ui"].setdefault("width_px", 460)
     cfg["ui"].setdefault("height_px", 320)
+    cfg["ui"].setdefault("always_on_top", False)
+    cfg["ui"].setdefault("always_on_back", True)
+    cfg["ui"].setdefault("borderless", True)
     cfg.setdefault("rules", [])
     cfg.setdefault("fallback_html", "<p>Configure me in ~/.conte/config.json</p>")
     return cfg
@@ -103,7 +106,10 @@ class Panel(QtWidgets.QMainWindow):
         self.cfg = cfg
         self.setWindowTitle("Conte")
         self.setWindowFlag(
-            Qt.WindowStaysOnTopHint, self.cfg["ui"].get("always_on_top", True)
+            Qt.WindowStaysOnTopHint, self.cfg["ui"].get("always_on_top", False)
+        )
+        self.setWindowFlag(
+            Qt.WindowStaysOnBottomHint, self.cfg["ui"].get("always_on_back", False)
         )
         if self.cfg["ui"].get("borderless", True):
             self.setWindowFlag(Qt.FramelessWindowHint, True)

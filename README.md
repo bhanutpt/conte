@@ -10,7 +10,7 @@ matching HTML snippet defined in a simple JSON config.
 - 🧠 Detects the foreground app (exe + title) and switches contextual content
 - 📋 Renders lightweight HTML (links + formatting) inside a PySide6 window
 - 📁 Stores user config at `~/.conte/config.json`, generated on first run
-- 🧲 Always-on-top, borderless panel that you can drag to any monitor
+- 🧲 Non-blocking, borderless panel that stays behind other windows by default
 - 🪟 Windows-first implementation with room for future Mac/Linux adapters
 
 ## Requirements
@@ -49,6 +49,8 @@ Each rule in the config looks like:
 - `match.title_regex`: optional regex run against the window title
 - `content_html`: small HTML fragment rendered in the panel
 - `fallback_html`: global HTML used when no rule matches
+- `ui.always_on_back`: set to `true` (default) to keep Conte behind other apps; toggle
+  `ui.always_on_top` if you prefer the classic overlay behavior
 
 The helper `context/config/defaults.py` contains the shipping presets. You can
 copy-paste sections from there into your personal config as a starting point.
