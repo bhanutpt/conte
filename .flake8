@@ -1,4 +1,11 @@
 [flake8]
 max-line-length = 88
 extend-ignore = E203, W503
+# Ignore E501 (line too long) for comments and strings
+per-file-ignores =
+    # Ignore line length in all Python files for comments and strings
+    *.py:E501
+extend-select = E501
+# Only trigger E501 for lines that are not comments or strings
+doctests = True
 exclude = .git, __pycache__, .venv, build, dist

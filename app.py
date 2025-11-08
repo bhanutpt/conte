@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 # ContextBuddy – a tiny always‑on‑top helper panel that switches content based on the active app
 # OS: Windows-first (uses pywin32), but structured for future macOS/Linux adapters.
@@ -22,11 +21,14 @@
 import os
 import sys
 import json
-import time
-import threading
+
+# import time
+# import threading
 import re
 import webbrowser
 from dataclasses import dataclass
+
+from contextbuddy.config import get_default_config
 
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtCore import Qt
@@ -43,113 +45,6 @@ except Exception:
 APP_DIR = os.path.expanduser("~/.contextbuddy")
 CONFIG_PATH = os.path.join(APP_DIR, "config.json")
 
-DEFAULT_CONFIG = {
-    "ui": {
-        "font_family": "Inter, Segoe UI, Arial",
-        "font_size_pt": 11,
-        "width_px": 460,
-        "height_px": 320,
-        "opacity": 0.92,
-        "always_on_top": True,
-        "borderless": True
-    },
-    "rules": [
-        {
-            "name": "VS Code – General",
-            "match": {
-                "exe": ["Code.exe", "code.exe"],
-                "title_regex": ".*"
-            },
-            "content_html": """
-                <h2>VS Code – Essentials</h2>
-                <ul>
-                  <li><b>Cmd/Ctrl + P</b>: Quick Open</li>
-                  <li><b>Cmd/Ctrl + Shift + P</b>: Command Palette</li>
-                  <li><b>Alt + Click</b>: Multiple cursors</li>
-                  <li><b>Cmd/Ctrl + D</b>: Add next match</li>
-                  <li><b>Cmd/Ctrl + /</b>: Toggle line comment</li>
-                  <li><b>Shift + Alt + ↑/↓</b>: Copy line up/down</li>
-                  <li><b>Cmd/Ctrl + B</b>: Toggle sidebar</li>
-                </ul>
-                <p>More: <a href=\"https://code.visualstudio.com/shortcuts/keyboard-shortcuts-windows.pdf\">Official cheat sheet</a></p>
-            """
-        },
-        {
-            "name": "VS Code – Extensions view",
-            "match": {
-                "exe": ["Code.exe", "code.exe"],
-                "title_regex": ".*Extensions.*"
-            },
-            "content_html": """
-                <h2>VS Code – Extensions</h2>
-                <ul>
-                  <li>Search: <b>Cmd/Ctrl + Shift + X</b>, then type extension name</li>
-                  <li>Enable/Disable: Use gear icon next to extension</li>
-                  <li>Quick Manage: <b>Cmd/Ctrl + ,</b> to open Settings</li>
-                </ul>
-                <p>Tip: Use <b>Profiles</b> to isolate extension sets (gear → Profiles).</p>
-            """
-        },
-        {
-            "name": "Chrome/Edge – Tabs & Nav",
-            "match": {
-                "exe": ["chrome.exe", "msedge.exe"],
-                "title_regex": ".*"
-            },
-            "content_html": """
-                <h2>Browser – Tabs & Navigation</h2>
-                <ul>
-                  <li><b>Ctrl + L</b>: Focus address bar</li>
-                  <li><b>Ctrl + T</b> / <b>Ctrl + W</b>: New/Close tab</li>
-                  <li><b>Ctrl + Shift + T</b>: Reopen closed tab</li>
-                  <li><b>Ctrl + Tab</b> / <b>Ctrl + Shift + Tab</b>: Next/Prev tab</li>
-                  <li><b>Alt + Left/Right</b>: Back/Forward</li>
-                  <li><b>Ctrl + Shift + B</b>: Toggle bookmarks bar</li>
-                </ul>
-                <p>DevTools: <b>F12</b> or <b>Ctrl + Shift + I</b></p>
-            """
-        },
-        {
-            "name": "Windows Explorer – Files",
-            "match": {
-                "exe": ["explorer.exe"],
-                "title_regex": ".*"
-            },
-            "content_html": """
-                <h2>Explorer – Handy Shortcuts</h2>
-                <ul>
-                  <li><b>Alt + ↑</b>: Up one folder</li>
-                  <li><b>Ctrl + L</b>: Focus path</li>
-                  <li><b>Ctrl + N</b>: New window</li>
-                  <li><b>Ctrl + Shift + N</b>: New folder</li>
-                  <li><b>Alt + Enter</b>: Properties</li>
-                </ul>
-            """
-        },
-        {
-            "name": "Terminal (cmd/PowerShell/WT)",
-            "match": {
-                "exe": ["cmd.exe", "powershell.exe", "pwsh.exe", "WindowsTerminal.exe"],
-                "title_regex": ".*"
-            },
-            "content_html": """
-                <h2>Terminal – Basics</h2>
-                <ul>
-                  <li><b>Ctrl + C</b>: Cancel task</li>
-                  <li><b>Ctrl + L</b> or <b>cls</b>: Clear</li>
-                  <li><b>Up/Down</b>: History</li>
-                  <li><b>Ctrl + Shift + C/V</b>: Copy/Paste (WT)</li>
-                </ul>
-                <p>PowerShell tips: <code>gci</code> (ls), <code>ii .</code> (open explorer), <code>code .</code> (open VS Code)</p>
-            """
-        }
-    ],
-    "fallback_html": """
-        <h2>ContextBuddy</h2>
-        <p>No rule matched the active app. Edit your rules in <code>~/.contextbuddy/config.json</code>.</p>
-        <p>Create entries with <b>match.exe</b> (list of process names) and optional <b>match.title_regex</b> and set <b>content_html</b>.</p>
-    """
-}
 
 @dataclass
 class ActiveContext:
@@ -161,7 +56,7 @@ def ensure_config():
     os.makedirs(APP_DIR, exist_ok=True)
     if not os.path.exists(CONFIG_PATH):
         with open(CONFIG_PATH, "w", encoding="utf-8") as f:
-            json.dump(DEFAULT_CONFIG, f, indent=2)
+            json.dump(get_default_config(), f, indent=2)
 
 
 def load_config():
@@ -173,11 +68,14 @@ def load_config():
     cfg["ui"].setdefault("width_px", 460)
     cfg["ui"].setdefault("height_px", 320)
     cfg.setdefault("rules", [])
-    cfg.setdefault("fallback_html", "<p>Configure me in ~/.contextbuddy/config.json</p>")
+    cfg.setdefault(
+        "fallback_html", "<p>Configure me in ~/.contextbuddy/config.json</p>"
+    )
     return cfg
 
 
 # --- Active window query (Windows) ---
+
 
 def get_active_window_info() -> ActiveContext:
     if not ACTIVE_WIN_SUPPORTED:
@@ -206,11 +104,15 @@ class Panel(QtWidgets.QMainWindow):
         super().__init__()
         self.cfg = cfg
         self.setWindowTitle("ContextBuddy")
-        self.setWindowFlag(Qt.WindowStaysOnTopHint, self.cfg["ui"].get("always_on_top", True))
+        self.setWindowFlag(
+            Qt.WindowStaysOnTopHint, self.cfg["ui"].get("always_on_top", True)
+        )
         if self.cfg["ui"].get("borderless", True):
             self.setWindowFlag(Qt.FramelessWindowHint, True)
         self.setAttribute(Qt.WA_TranslucentBackground, False)
-        self.resize(self.cfg["ui"].get("width_px", 460), self.cfg["ui"].get("height_px", 320))
+        self.resize(
+            self.cfg["ui"].get("width_px", 460), self.cfg["ui"].get("height_px", 320)
+        )
         self.setWindowOpacity(float(self.cfg["ui"].get("opacity", 0.92)))
 
         central = QtWidgets.QWidget()
@@ -250,7 +152,9 @@ class Panel(QtWidgets.QMainWindow):
             font.setFamily(self.cfg["ui"].get("font_family", "Segoe UI"))
         font.setPointSize(int(self.cfg["ui"].get("font_size_pt", 11)))
         self.view.setFont(font)
-        self.view.setStyleSheet("QTextBrowser{background:#111418;color:#e6e6e6;border:1px solid #2a2f35;border-radius:10px;padding:10px;} a{color:#7ab6ff;}")
+        self.view.setStyleSheet(
+            "QTextBrowser{background:#111418;color:#e6e6e6;border:1px solid #2a2f35;border-radius:10px;padding:10px;} a{color:#7ab6ff;}"
+        )
         layout.addWidget(self.view, 1)
 
         # Dragging for borderless window
@@ -286,7 +190,9 @@ class Panel(QtWidgets.QMainWindow):
 
     def mousePressEvent(self, e: QtGui.QMouseEvent):
         if e.button() == Qt.LeftButton:
-            self._drag_pos = e.globalPosition().toPoint() - self.frameGeometry().topLeft()
+            self._drag_pos = (
+                e.globalPosition().toPoint() - self.frameGeometry().topLeft()
+            )
             e.accept()
 
     def mouseMoveEvent(self, e: QtGui.QMouseEvent):
@@ -311,7 +217,9 @@ class Panel(QtWidgets.QMainWindow):
         try:
             self.cfg = load_config()
         except Exception as e:
-            QtWidgets.QMessageBox.warning(self, "Config error", f"Failed to load config:\n{e}")
+            QtWidgets.QMessageBox.warning(
+                self, "Config error", f"Failed to load config:\n{e}"
+            )
         # re-apply UI tunables
         self.setWindowOpacity(float(self.cfg["ui"].get("opacity", 0.92)))
 
@@ -324,7 +232,7 @@ class Panel(QtWidgets.QMainWindow):
     def update_for_context(self, ctx: ActiveContext):
         exe = (ctx.exe or "").lower()
         title = ctx.title or ""
-        self.lbl_app.setText(f"{exe}  —  {title[:48]}{'…' if len(title)>48 else ''}")
+        self.lbl_app.setText(f"{exe}  —  {title[:48]}{'…' if len(title) > 48 else ''}")
         html = None
         for rule in self.cfg.get("rules", []):
             exes = [e.lower() for e in rule.get("match", {}).get("exe", [])]
