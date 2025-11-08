@@ -1,4 +1,4 @@
-"""Built-in ContextBuddy configuration presets."""
+"""Built-in Conte configuration presets."""
 
 DEFAULT_CONFIG = {
     "ui": {
@@ -96,8 +96,8 @@ DEFAULT_CONFIG = {
         },
     ],
     "fallback_html": """
-        <h2>ContextBuddy</h2>
-        <p>No rule matched the active app. Edit your rules in <code>~/.contextbuddy/config.json</code>.</p>
+        <h2>Conte</h2>
+        <p>No rule matched the active app. Edit your rules in <code>~/.conte/config.json</code>.</p>
         <p>Create entries with <b>match.exe</b> (list of process names) and optional <b>match.title_regex</b> and set <b>content_html</b>.</p>
     """,
 }

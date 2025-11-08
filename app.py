@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# ContextBuddy – a tiny always‑on‑top helper panel that switches content based on the active app
+# Conte – a tiny always‑on‑top helper panel that switches content based on the active app
 # OS: Windows-first (uses pywin32), but structured for future macOS/Linux adapters.
 #
 # Features (MVP):
 #  • Always-on-top, borderless, draggable mini window you can park on any monitor
 #  • Auto-detects active window (exe + title) and swaps to matching cheat-sheet
-#  • User-editable JSON config created on first run (~/.contextbuddy/config.json)
+#  • User-editable JSON config created on first run (~/.conte/config.json)
 #  • Simple HTML rendering (links clickable)
 #  • System tray menu: Open config, Reload, Opacity, Quit
 #
@@ -28,7 +28,7 @@ import re
 import webbrowser
 from dataclasses import dataclass
 
-from contextbuddy.config import get_default_config
+from context.config import get_default_config
 
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtCore import Qt
@@ -42,7 +42,7 @@ try:
 except Exception:
     ACTIVE_WIN_SUPPORTED = False
 
-APP_DIR = os.path.expanduser("~/.contextbuddy")
+APP_DIR = os.path.expanduser("~/.conte")
 CONFIG_PATH = os.path.join(APP_DIR, "config.json")
 
 
@@ -68,9 +68,7 @@ def load_config():
     cfg["ui"].setdefault("width_px", 460)
     cfg["ui"].setdefault("height_px", 320)
     cfg.setdefault("rules", [])
-    cfg.setdefault(
-        "fallback_html", "<p>Configure me in ~/.contextbuddy/config.json</p>"
-    )
+    cfg.setdefault("fallback_html", "<p>Configure me in ~/.conte/config.json</p>")
     return cfg
 
 
@@ -103,7 +101,7 @@ class Panel(QtWidgets.QMainWindow):
     def __init__(self, cfg):
         super().__init__()
         self.cfg = cfg
-        self.setWindowTitle("ContextBuddy")
+        self.setWindowTitle("Conte")
         self.setWindowFlag(
             Qt.WindowStaysOnTopHint, self.cfg["ui"].get("always_on_top", True)
         )
@@ -286,7 +284,7 @@ def main():
     if not ACTIVE_WIN_SUPPORTED:
         w.apply_content(
             """
-            <h2>ContextBuddy</h2>
+            <h2>Conte</h2>
             <p>Active window detection is unavailable. On Windows, install <code>pywin32</code> and <code>psutil</code>.</p>
             <pre>pip install pywin32 psutil</pre>
             """

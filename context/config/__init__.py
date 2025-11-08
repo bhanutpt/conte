@@ -1,4 +1,4 @@
-"""Configuration helpers for ContextBuddy."""
+"""Configuration helpers for Conte."""
 
 from __future__ import annotations
 
